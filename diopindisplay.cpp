@@ -1,6 +1,6 @@
 #include "diopindisplay.h"
 
-DIOPinDisplay::DIOPinDisplay(QWidget *parent, int displayId, int pinNum) : QWidget(parent), pinName("pin"), id(displayId), pinNumber(pinNum)
+DIOPinDisplay::DIOPinDisplay(QWidget *parent, int displayId, int pinNum) : QWidget(parent), pinName("pin"), id(displayId), pinNumber(pinNum), enabled(false)
 {
     this->setLayout(new QVBoxLayout());
     this->layout()->setContentsMargins(0,0,0,0);
@@ -18,10 +18,16 @@ DIOPinDisplay::DIOPinDisplay(QWidget *parent, int displayId, int pinNum) : QWidg
     pinDirectionButton = new QPushButton("Pin Direction", this);
     pinDirectionButton->setCheckable(true);
     pinValueLabel = new QLabel(QString("Read Value"));
+    pinEnabledButton = new QPushButton("Enabled");
+    pinEnabledButton->setCheckable(true);
+    pinEnabledButton->setChecked(true);
+
+    connect(pinEnabledButton, SIGNAL(clicked(bool)), this, SLOT(onEnableButtonClicked(bool)));
 
     connect(pinLevelButton, SIGNAL(clicked(bool)), this, SLOT(onLevelChange(bool)));
     connect(pinDirectionButton, SIGNAL(clicked(bool)), this, SLOT(onDirectionChange(bool)));
 
+    controlsGroupBox->layout()->addWidget(pinEnabledButton);
     controlsGroupBox->layout()->addWidget(pinDirectionButton);
     controlsGroupBox->layout()->addWidget(pinValueLabel);
     controlsGroupBox->layout()->addWidget(pinLevelButton);
@@ -76,5 +82,20 @@ void DIOPinDisplay::setPinDirection(int dir)
         pinDirectionButton->setChecked(false);
         pinDirectionButton->setText("INPUT");
         pinLevelButton->setDisabled(true);
+    }
+}
+
+void DIOPinDisplay::onEnableButtonClicked(bool en)
+{
+    if( !en ){
+        pinLevelButton->setVisible(false);
+        pinDirectionButton->setVisible(false);
+        pinValueLabel->setVisible(false);
+        pinEnabledButton->setText("Enable");
+    } else {
+        pinLevelButton->setVisible(true);
+        pinDirectionButton->setVisible(true);
+        pinValueLabel->setVisible(true);
+        pinEnabledButton->setText("Enabled");
     }
 }

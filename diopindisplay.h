@@ -17,6 +17,7 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
+#include <QSlider>
 
 class DIOPinDisplay : public QWidget
 {
@@ -30,11 +31,12 @@ private:
     int id;
     int pinNumber;
     int pinDirection, pinValue;
+    bool enabled;
     QString pinName;
 
     QGroupBox *mainBox;
     QLabel *pinValueLabel;
-    QPushButton *pinDirectionButton, *pinLevelButton;
+    QPushButton *pinDirectionButton, *pinLevelButton, *pinEnabledButton;
 
 signals:
     void emitPinDirection(int pin, int dir);
@@ -43,6 +45,7 @@ signals:
 private slots:
     void onLevelChange(bool chk);
     void onDirectionChange(bool chk);
+    void onEnableButtonClicked(bool chk);
 };
 
 #endif // DIOPINDISPLAY_H

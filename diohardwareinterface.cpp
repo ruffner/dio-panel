@@ -31,13 +31,16 @@ DIOHardwareInterface::DIOHardwareInterface(QWidget *parent) : QWidget(parent), i
 
     connect(connectButton, SIGNAL(clicked()), this, SLOT(onConnectAttempt()));
     connect(serial, SIGNAL(readyRead()), this, SLOT(onReadyRead()));
+    connect(serial, static_cast<void(QSerialPort::*)(QSerialPort::SerialPortError)>(&QSerialPort::error),
+        [=](QSerialPort::SerialPortError error){ qDebug() << "serial port error: " << error; });
+
 }
 
 void DIOHardwareInterface::onConnectAttempt()
 {
     if( !isConnected ){
        // SET BAUD, MAYBE OTHER SHIT
-        serial->setPortName(serialComboBox->currentText());
+       serial->setPortName(serialComboBox->currentText());
        serial->setBaudRate(QSerialPort::Baud115200);
 
        qDebug() << "opening serial port";
@@ -52,13 +55,26 @@ void DIOHardwareInterface::onConnectAttempt()
             lastCommand.push_front(CMD_GETVALMASK);
             sendCommand(lastCommand.front());
 
+            isConnected = true;
+            connectButton->setText("Disconnect");
+            connectionLabel->setText("Connected");
+            //qDebug() << "starting polling timer";
+            timer->start(50);
             emit connected();
        } else {
            qDebug() << "failed to open serial port";
        }
    } else {
-       emit disconnected();
-   }
+        serial->close();
+        connectionLabel->setText("Disconnected");
+        connectButton->setText("Connect");
+        isConnected = false;
+        timer->stop();
+        pins.clear();
+        pinDirs.clear();
+        pinVals.clear();
+        emit disconnected();
+    }
 }
 
 void DIOHardwareInterface::sendCommand(QString s)
@@ -114,13 +130,9 @@ void DIOHardwareInterface::parseResponse(QByteArray data)
             pins.push_back(QPair<int,int>(i,chunks[i].toInt()));
             pinDirs.push_back(0);
             pinVals.push_back(0);
-            qDebug() << "adding pin " << chunks[i].toInt();
+            //qDebug() << "adding pin " << chunks[i].toInt();
         }
         emit emitPinList(pins);
-
-        qDebug() << "starting polling timer";
-        timer->start(50);
-
     }
     else if( lastCommand.back() == CMD_GETDIRMASK ){
         QStringList chunks = QString(data).split(",");

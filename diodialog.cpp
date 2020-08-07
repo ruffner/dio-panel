@@ -75,4 +75,12 @@ void DIODialog::onHardwareConnected()
 void DIODialog::onHardwareDisconnected()
 {
     qDebug() << "hardware disconnected";
+    for( auto d : pinDisplays){
+        disconnect(d, SIGNAL(emitPinDirection(int, int)), hardware, SLOT(onSetPinDirection(int, int)));
+        disconnect(d, SIGNAL(emitPinValue(int, int)), hardware, SLOT(onSetPinValue(int, int)));
+        pinDisplayLayout->removeWidget(d);
+        pinDisplays.removeFirst();
+        delete d;
+    }
+    pinDisplays.clear();
 }
